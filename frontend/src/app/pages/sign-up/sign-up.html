@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="orb orb--orange"></div>
+  <div class="orb orb--cyan"></div>
+
+  <div class="wrapper">
+    <div class="logo">
+      <span class="material-icons logo__icon">auto_awesome</span>
+      <div class="logo__text">ReSkill<span>AI</span></div>
+    </div>
+
+    <div class="card card-glow">
+      <h2 class="card-title">Create your account</h2>
+      <p class="card-subtitle">Join thousands navigating the AI era.</p>
+
+      @if (error) {
+        <div class="error-banner">{{ error }}</div>
+      }
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="field">
+          <label class="field-label">Full Name</label>
+          <input type="text" [(ngModel)]="fullName" name="fullName" required
+                 class="input-dark" placeholder="Jane Smith" />
+        </div>
+        <div class="field">
+          <label class="field-label">Email</label>
+          <input type="email" [(ngModel)]="email" name="email" required
+                 class="input-dark" placeholder="you@example.com" />
+        </div>
+        <div class="field field--last">
+          <label class="field-label">Password</label>
+          <input type="password" [(ngModel)]="password" name="password" required
+                 class="input-dark" placeholder="••••••••" minlength="8" />
+          @if (password && password.length < 8) {
+            <span class="field-hint field-hint--error">Password must be at least 8 characters</span>
+          }
+        </div>
+
+        <div class="type-section">
+          <label class="field-label">I am a...</label>
+          <div class="type-grid">
+            <button type="button" (click)="userType = 'expert'"
+                    class="type-btn"
+                    [class.type-btn--expert-active]="userType === 'expert'">
+              <span class="material-icons type-btn__icon">person</span>
+              <div class="type-btn__title">Professional</div>
+              <div class="type-btn__sub">Career assessment & opportunities</div>
+            </button>
+            <button type="button" (click)="userType = 'business'"
+                    class="type-btn"
+                    [class.type-btn--business-active]="userType === 'business'">
+              <span class="material-icons type-btn__icon">business</span>
+              <div class="type-btn__title">Business</div>
+              <div class="type-btn__sub">Hire verified senior experts</div>
+            </button>
+          </div>
+        </div>
+
+        <div id="clerk-captcha"></div>
+
+        <button type="submit" [disabled]="loading || !userType || password.length < 8" class="btn-primary w-full">
+          @if (loading) { Creating account... } @else { Create Account → }
+        </button>
+      </form>
+
+      <hr class="divider" />
+      <p class="footer-text">
+        Already have an account? <a href="/sign-in">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>

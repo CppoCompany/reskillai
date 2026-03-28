@@ -1,0 +1,241 @@
+<div class="page">
+  <div class="orb orb--amber"></div>
+  <div class="orb orb--cyan"></div>
+  <app-navbar />
+
+  <div class="wrapper">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a class="breadcrumb__link" routerLink="/trainings">
+        <span class="material-icons">arrow_back</span>
+        Back to Trainings
+      </a>
+      @if (skill()) {
+        <span class="breadcrumb__sep material-icons">chevron_right</span>
+        <span class="breadcrumb__skill">{{ skill() }}</span>
+      }
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="lesson-loading-page">
+        <span class="material-icons spin">auto_awesome</span>
+        <p>Generating your lesson…</p>
+      </div>
+    }
+
+    <!-- Error -->
+    @else if (lessonError()) {
+      <div class="lesson-error-page card">
+        <span class="material-icons">error_outline</span>
+        <p>{{ lessonError() }}</p>
+        <a class="btn-back" routerLink="/trainings">Back to Trainings</a>
+      </div>
+    }
+
+    <!-- Content -->
+    @else if (lesson() && step()) {
+      <div class="lesson-page">
+
+        <!-- Step header -->
+        <div class="step-header card">
+          <div class="step-header__num">Step {{ step()!.step }}</div>
+          <h1 class="step-header__title">{{ step()!.title }}</h1>
+          <p class="step-header__desc">{{ step()!.description }}</p>
+          <div class="step-header__meta">
+            <span class="meta-chip">
+              <span class="material-icons">timer</span>
+              ~{{ step()!.estimated_hours }}h estimated
+            </span>
+          </div>
+        </div>
+
+        <!-- Key concepts -->
+        @if (lesson()!.key_concepts.length) {
+          <div class="lesson-section card">
+            <p class="lesson-section-label">
+              <span class="material-icons">bolt</span> Key Concepts
+            </p>
+            <div class="concepts-list">
+              @for (c of lesson()!.key_concepts; track c) {
+                <span class="concept-chip">{{ c }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Explanation -->
+        <div class="lesson-section card">
+          <p class="lesson-section-label">
+            <span class="material-icons">menu_book</span> Lesson
+          </p>
+          <p class="lesson-text">{{ lesson()!.explanation }}</p>
+        </div>
+
+        <!-- Tips -->
+        @if (lesson()!.tips.length) {
+          <div class="lesson-section card lesson-section--tips">
+            <p class="lesson-section-label">
+              <span class="material-icons">lightbulb</span> Pro Tips
+            </p>
+            <ul class="tips-list">
+              @for (tip of lesson()!.tips; track tip) {
+                <li class="tips-list__item">
+                  <span class="material-icons">check_circle</span>{{ tip }}
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <!-- Common pitfalls -->
+        @if (lesson()!.common_pitfalls.length) {
+          <div class="lesson-section card lesson-section--pitfalls">
+            <p class="lesson-section-label">
+              <span class="material-icons">warning</span> Common Pitfalls
+            </p>
+            <ul class="pitfalls-list">
+              @for (p of lesson()!.common_pitfalls; track p) {
+                <li class="pitfalls-list__item">
+                  <span class="material-icons">error_outline</span>{{ p }}
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <!-- Code example -->
+        @if (lesson()!.code_example) {
+          <div class="lesson-section card">
+            <div class="code-header">
+              <p class="lesson-section-label">
+                <span class="material-icons">code</span>
+                {{ lesson()!.code_language || 'Code' }} Example
+              </p>
+              @if (isDevLanguage(lesson()!.code_language)) {
+                <div class="code-actions">
+                  <button class="code-action-btn" type="button"
+                    (click)="copyCode(lesson()!.code_example)">
+                    <span class="material-icons">content_copy</span> Copy
+                  </button>
+                  <button class="code-action-btn code-action-btn--ide" type="button"
+                    (click)="openInStackBlitz(lesson()!.code_example, lesson()!.code_language, step()!.title)">
+                    <span class="material-icons">open_in_new</span> Open in IDE
+                  </button>
+                </div>
+              }
+            </div>
+            <pre class="code-block"><code>{{ lesson()!.code_example }}</code></pre>
+          </div>
+        }
+
+        <!-- Quiz -->
+        <div class="lesson-section card">
+          <p class="lesson-section-label">
+            <span class="material-icons">quiz</span>
+            Quick Quiz
+            @if (quizSubmitted()) {
+              <span class="quiz-score"
+                [class.quiz-score--pass]="quizScore() >= 2"
+                [class.quiz-score--fail]="quizScore() < 2">
+                {{ quizScore() }}/{{ lesson()!.quiz.length }} correct
+              </span>
+            }
+          </p>
+
+          @for (q of lesson()!.quiz; track $index; let qi = $index) {
+            <div class="quiz-question">
+              <p class="quiz-question__text">{{ qi + 1 }}. {{ q.question }}</p>
+              <div class="quiz-options">
+                @for (opt of q.options; track $index; let oi = $index) {
+                  <button type="button"
+                    class="quiz-option"
+                    [ngClass]="answerClass(qi, oi)"
+                    (click)="selectAnswer(qi, oi)">
+                    <span class="quiz-option__letter">{{ ['A','B','C','D'][oi] }}</span>
+                    {{ opt }}
+                  </button>
+                }
+              </div>
+              @if (quizSubmitted()) {
+                <p class="quiz-explanation">
+                  <span class="material-icons">{{ quizAnswers()[qi] === q.correct_index ? 'check_circle' : 'cancel' }}</span>
+                  {{ q.explanation }}
+                </p>
+              }
+            </div>
+          }
+
+          @if (!quizSubmitted()) {
+            <button class="quiz-submit-btn" type="button"
+              [disabled]="!allAnswered()"
+              (click)="submitQuiz()">
+              Submit Answers
+            </button>
+          } @else {
+            <div class="quiz-result-bar"
+              [class.quiz-result-bar--pass]="quizScore() >= 2"
+              [class.quiz-result-bar--fail]="quizScore() < 2">
+              @if (quizScore() >= 2) {
+                <span class="material-icons">emoji_events</span>
+                Great job! Head back and mark this step as done.
+              } @else {
+                <span class="material-icons">refresh</span>
+                Review the lesson above and try again.
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Q&A Chat -->
+        <div class="lesson-section card chat-section">
+          <p class="lesson-section-label">
+            <span class="material-icons">forum</span> Ask the Instructor
+          </p>
+          @if (chatMessages().length > 0) {
+            <div class="chat-messages">
+              @for (msg of chatMessages(); track $index) {
+                <div class="chat-msg"
+                  [class.chat-msg--user]="msg.role === 'user'"
+                  [class.chat-msg--ai]="msg.role === 'assistant'">
+                  <span class="chat-msg__avatar material-icons">
+                    {{ msg.role === 'user' ? 'person' : 'smart_toy' }}
+                  </span>
+                  <span class="chat-msg__text">{{ msg.text }}</span>
+                </div>
+              }
+              @if (chatLoading()) {
+                <div class="chat-msg chat-msg--ai chat-msg--thinking">
+                  <span class="material-icons spin">smart_toy</span>
+                  <span>Thinking…</span>
+                </div>
+              }
+            </div>
+          }
+          <div class="chat-input-row">
+            <input class="chat-input" type="text"
+              [(ngModel)]="chatInputValue"
+              placeholder="Ask a question about this step…"
+              (keydown.enter)="sendQuestion()" />
+            <button class="chat-send-btn" type="button"
+              (click)="sendQuestion()"
+              [disabled]="!chatInputValue.trim() || chatLoading()">
+              <span class="material-icons">send</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="lesson-footer">
+          <a class="btn-back" routerLink="/trainings">
+            <span class="material-icons">arrow_back</span>
+            Back to Trainings
+          </a>
+        </div>
+
+      </div>
+    }
+
+  </div>
+</div>

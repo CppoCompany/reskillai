@@ -1,0 +1,136 @@
+:host { display: block; }
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8FAFC;
+  position: relative;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+
+  &--amber {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #F59E0B, transparent 70%);
+    opacity: 0.2;
+    top: -100px; left: -100px;
+  }
+
+  &--cyan {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, #06B6D4, transparent 70%);
+    opacity: 0.15;
+    bottom: -80px; right: -60px;
+  }
+}
+
+.wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  padding: 0 1rem;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .logo__icon { color: #F59E0B; font-size: 36px; }
+
+  .logo__text {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+
+    span { color: #F59E0B; }
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(245, 158, 11, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .material-icons { color: #F59E0B; font-size: 22px; }
+  }
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 2px;
+}
+
+.card-subtitle {
+  color: #64748B;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #DC2626;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+
+  .material-icons { font-size: 18px; flex-shrink: 0; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+.field { margin-bottom: 1rem; }
+.field--last { margin-bottom: 1.5rem; }
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.footer-text {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #475569;
+  margin: 0;
+
+  a {
+    color: #F59E0B;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}

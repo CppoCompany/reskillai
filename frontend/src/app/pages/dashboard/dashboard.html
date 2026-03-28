@@ -1,0 +1,147 @@
+<div class="page">
+
+  <app-navbar>
+    @if (user) {
+      <span class="nav__username">{{ user.full_name || user.email }}</span>
+      <span class="badge" [class]="user.plan === 'pro' ? 'badge-cyan' : 'badge-amber'">
+        {{ user.plan | uppercase }}
+      </span>
+    }
+  </app-navbar>
+
+  <div class="main">
+
+    @if (user) {
+      <div class="header">
+        <div class="badge badge-green header__badge">● &nbsp; Active session</div>
+        <h1 class="header__title">
+          Welcome back, <span class="gradient-text">{{ (user.full_name || '').split(' ')[0] || 'there' }}</span>
+        </h1>
+        <p class="header__subtitle">Your AI career intelligence dashboard.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card stat-card--amber">
+          <span class="material-icons stat-card__icon--amber">person</span>
+          <div>
+            <div class="stat-card__label">Account type</div>
+            <div class="stat-card__value">{{ user.user_type }}</div>
+          </div>
+        </div>
+        <div class="stat-card stat-card--cyan">
+          <span class="material-icons stat-card__icon--cyan">workspace_premium</span>
+          <div>
+            <div class="stat-card__label">Plan</div>
+            <div class="stat-card__value">{{ user.plan }}</div>
+          </div>
+        </div>
+        <div class="stat-card stat-card--green">
+          <span class="material-icons stat-card__icon--green">check_circle</span>
+          <div>
+            <div class="stat-card__label">Status</div>
+            <div class="stat-card__value stat-card__value--green">Verified</div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="cards-grid">
+
+      <a class="card dash-card dash-card--link" routerLink="/assessment">
+        <div class="dash-card__orb dash-card__orb--amber"></div>
+        <div class="dash-card__body">
+          <div class="icon-wrap icon-wrap--amber">
+            <span class="material-icons icon-wrap__icon">psychology</span>
+          </div>
+          <div class="dash-card__content">
+            <div class="dash-card__header">
+              <h3 class="dash-card__title">AI Career Assessment</h3>
+              <span class="badge badge-green">Live</span>
+            </div>
+            <p class="dash-card__desc">
+              Discover your AI displacement risk score and get a personalised reskilling roadmap tailored to your career.
+            </p>
+          </div>
+        </div>
+        <div class="dash-card__footer">
+          <span class="material-icons dash-card__footer-icon">arrow_forward</span>
+          <span class="dash-card__footer-text">Start your assessment</span>
+        </div>
+      </a>
+
+      <a class="card dash-card dash-card--link" routerLink="/marketplace">
+        <div class="dash-card__orb dash-card__orb--cyan"></div>
+        <div class="dash-card__body">
+          <div class="icon-wrap icon-wrap--cyan">
+            <span class="material-icons icon-wrap__icon">storefront</span>
+          </div>
+          <div class="dash-card__content">
+            <div class="dash-card__header">
+              <h3 class="dash-card__title">Expert Marketplace</h3>
+              <span class="badge badge-green">Live</span>
+            </div>
+            <p class="dash-card__desc">
+              Browse and connect with verified senior professionals matched to your exact business needs.
+            </p>
+          </div>
+        </div>
+        <div class="dash-card__footer">
+          <span class="material-icons dash-card__footer-icon">arrow_forward</span>
+          <span class="dash-card__footer-text">Browse the marketplace</span>
+        </div>
+      </a>
+
+      <div class="card dash-card">
+        <div class="dash-card__body">
+          <div class="icon-wrap icon-wrap--orange">
+            <span class="material-icons icon-wrap__icon">auto_awesome</span>
+          </div>
+          <div class="dash-card__content">
+            <div class="dash-card__header">
+              <h3 class="dash-card__title">AI Matching</h3>
+              <span class="badge badge-orange">Phase 4</span>
+            </div>
+            <p class="dash-card__desc">
+              Vector-powered semantic matching using pgvector embeddings — finds the right expert in seconds.
+            </p>
+          </div>
+        </div>
+        <div class="dash-card__footer">
+          <span class="material-icons dash-card__footer-icon">schedule</span>
+          <span class="dash-card__footer-text">Available in Phase 4 — coming soon</span>
+        </div>
+      </div>
+
+      @if (user) {
+        <div class="card card-glow dash-card">
+          <div class="dash-card__body">
+            <div class="icon-wrap icon-wrap--green">
+              <span class="material-icons icon-wrap__icon">account_circle</span>
+            </div>
+            <div class="dash-card__content">
+              <div class="dash-card__header">
+                <h3 class="dash-card__title">Your Profile</h3>
+                <span class="badge badge-green">Active</span>
+              </div>
+              <div class="profile-rows">
+                <div class="profile-row">
+                  <span class="profile-key">Email</span>
+                  <span class="profile-val">{{ user.email }}</span>
+                </div>
+                <div class="profile-row">
+                  <span class="profile-key">Type</span>
+                  <span class="profile-val">{{ user.user_type }}</span>
+                </div>
+                <div class="profile-row">
+                  <span class="profile-key">Plan</span>
+                  <span class="profile-val">{{ user.plan }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

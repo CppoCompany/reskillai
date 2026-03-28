@@ -1,0 +1,529 @@
+<div class="page">
+  <div class="orb"></div>
+  <app-navbar />
+
+  <!-- Training generation toast -->
+  @if (trainingGenerating()) {
+    <div class="training-toast">
+      <span class="material-icons spin">auto_awesome</span>
+      <div class="training-toast__text">
+        <span class="training-toast__title">Building your training plan for <strong>{{ trainingGeneratingSkill() }}</strong>…</span>
+        <span class="training-toast__sub">You'll be redirected automatically in ~30 seconds</span>
+      </div>
+      <div class="training-toast__dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  }
+  <div class="wrapper">
+    <div class="page-header">
+      <div class="page-header__top">
+        <span class="material-icons page-header__icon">psychology</span>
+        <h1 class="page-header__title">AI Career Assessment</h1>
+      </div>
+      <p class="page-header__sub">Discover your AI displacement risk and get a personalised reskilling roadmap.</p>
+    </div>
+
+    @if (step() < 3) {
+      <div class="steps">
+        <div class="step" [class.step--active]="step() >= 1" [class.step--done]="step() > 1">
+          <div class="step__dot">
+            @if (step() > 1) { <span class="material-icons">check</span> }
+            @else { 1 }
+          </div>
+          <span class="step__label">Your Role</span>
+        </div>
+        <div class="step__line" [class.step__line--done]="step() > 1"></div>
+        <div class="step" [class.step--active]="step() >= 2">
+          <div class="step__dot">2</div>
+          <span class="step__label">Skills and Details</span>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="error-banner">{{ error() }}</div>
+    }
+
+    @if (step() === 1) {
+      <div class="card">
+        <div class="section-header">
+          <div class="section-icon section-icon--amber"><span class="material-icons">work</span></div>
+          <div><p class="section-title">Your Current Role</p><p class="section-sub">Tell us about your position and industry.</p></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Job Title *</label>
+            <input class="input-dark" type="text" [(ngModel)]="form.job_title" placeholder="e.g. Marketing Manager" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Industry *</label>
+            <input class="input-dark" type="text" [(ngModel)]="form.current_industry" placeholder="e.g. Finance, Healthcare" />
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Years of Experience *</label>
+            <input class="input-dark" type="number" [(ngModel)]="form.years_experience" min="0" max="50" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Education Level *</label>
+            <select class="input-dark" [(ngModel)]="form.education_level">
+              <option value="high_school">High School</option>
+              <option value="bachelor">Bachelor Degree</option>
+              <option value="master">Master Degree</option>
+              <option value="phd">PhD</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" (click)="nextStep()" [disabled]="!form.job_title || !form.current_industry">
+            Continue <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (step() === 2) {
+      <div class="card">
+        <div class="section-header">
+          <div class="section-icon section-icon--cyan"><span class="material-icons">build</span></div>
+          <div><p class="section-title">Skills and Details</p><p class="section-sub">The more you share, the more accurate your assessment.</p></div>
+        </div>
+
+        <div class="cv-upload-section">
+          <p class="form-label">CV / Resume <span class="form-hint">(optional — PDF, DOCX or TXT for a more accurate result)</span></p>
+          @if (!cvFileName() && !cvUploading()) {
+            <label class="cv-dropzone" for="cv-file-input">
+              <span class="material-icons cv-dropzone__icon">upload_file</span>
+              <span class="cv-dropzone__text">Click to upload your CV</span>
+              <span class="cv-dropzone__hint">PDF, DOCX or TXT · max 5 MB</span>
+              <input id="cv-file-input" type="file" accept=".pdf,.docx,.txt" (change)="onCvSelected($event)" style="display:none" />
+            </label>
+          }
+          @if (cvUploading()) {
+            <div class="cv-status cv-status--uploading">
+              <span class="material-icons spin">sync</span>
+              <span>Reading <strong>{{ cvFileName() }}</strong>…</span>
+            </div>
+          }
+          @if (cvFileName() && !cvUploading() && cvText()) {
+            <div class="cv-status cv-status--done">
+              <span class="material-icons">check_circle</span>
+              <span>
+                <strong>{{ cvFileName() }}</strong>
+                @if (cvSavedToDb()) {
+                  <span class="cv-saved-tag">· Saved to your profile</span>
+                }
+              </span>
+              <button class="cv-action-btn" (click)="toggleCvView()" type="button" [title]="cvExpanded() ? 'Hide CV' : 'View CV'">
+                <span class="material-icons">{{ cvExpanded() ? 'expand_less' : 'visibility' }}</span>
+                {{ cvExpanded() ? 'Hide' : 'View' }}
+              </button>
+              <a class="cv-action-btn cv-action-btn--improve" routerLink="/cv-builder" title="Improve CV with AI">
+                <span class="material-icons">auto_fix_high</span>
+                Improve
+              </a>
+              <button class="cv-action-btn cv-action-btn--replace" (click)="removeCv()" type="button" title="Remove and replace CV">
+                <span class="material-icons">swap_horiz</span>
+                Replace
+              </button>
+            </div>
+            @if (cvExpanded()) {
+              <div class="cv-preview">
+                <div class="cv-preview__header">
+                  <span class="material-icons">article</span>
+                  CV Content — read-only
+                </div>
+                <pre class="cv-preview__text">{{ cvText() }}</pre>
+              </div>
+            }
+          }
+          @if (cvError()) {
+            <div class="cv-status cv-status--error">
+              <span class="material-icons">error</span>
+              <span>{{ cvError() }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Current Skills <span class="form-hint">(comma-separated, optional)</span></label>
+          <input class="input-dark" type="text" [(ngModel)]="skillsRaw" placeholder="e.g. Excel, SQL, Project Management" />
+        </div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Location <span class="form-hint">(optional)</span></label>
+            <input class="input-dark" type="text" [(ngModel)]="form.location" placeholder="e.g. New York, Remote" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Annual Salary USD <span class="form-hint">(optional)</span></label>
+            <input class="input-dark" type="number" [(ngModel)]="form.annual_salary" placeholder="e.g. 75000" />
+          </div>
+        </div>
+        <div class="form-actions form-actions--split">
+          <button class="btn-outline" (click)="prevStep()"><span class="material-icons">arrow_back</span> Back</button>
+          <button class="btn-primary" (click)="submit()" [disabled]="loading()">
+            @if (loading()) {
+              <span class="material-icons spin">sync</span> Analysing...
+            } @else {
+              <span class="material-icons">auto_awesome</span> Run Assessment
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (step() === 3 && result()) {
+      <div class="results">
+        <div class="card risk-card">
+          <div class="risk-gauge">
+            <svg class="gauge-svg" viewBox="0 0 200 110">
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none"
+                [attr.stroke]="riskColor()" stroke-width="14" stroke-linecap="round"
+                [attr.stroke-dasharray]="251"
+                [attr.stroke-dashoffset]="251 - (result()!.ai_displacement_risk / 100) * 251"
+                style="transition: stroke-dashoffset 1s ease"/>
+            </svg>
+            <div class="gauge-value" [style.color]="riskColor()">{{ result()!.ai_displacement_risk }}</div>
+            <div class="gauge-label">Risk Score</div>
+          </div>
+          <div class="risk-meta">
+            <span class="badge" [ngClass]="riskBadgeClass()">{{ result()!.risk_level.toUpperCase() }} RISK</span>
+            <p class="risk-explanation">{{ result()!.risk_explanation }}</p>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="section-header">
+              <div class="section-icon section-icon--red"><span class="material-icons">warning</span></div>
+              <div><p class="section-title">Tasks at Risk</p><p class="section-sub">AI may automate these</p></div>
+            </div>
+            <ul class="task-list">
+              @for (t of result()!.affected_tasks; track t) {
+                <li class="task-list__item task-list__item--risk"><span class="material-icons">close</span>{{ t }}</li>
+              }
+            </ul>
+          </div>
+          <div class="card">
+            <div class="section-header">
+              <div class="section-icon section-icon--green"><span class="material-icons">verified</span></div>
+              <div><p class="section-title">Safe Tasks</p><p class="section-sub">Hard to automate</p></div>
+            </div>
+            <ul class="task-list">
+              @for (t of result()!.safe_tasks; track t) {
+                <li class="task-list__item task-list__item--safe"><span class="material-icons">check</span>{{ t }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+        <div class="card path-card">
+          <div class="section-header">
+            <div class="section-icon section-icon--amber"><span class="material-icons">{{ pathIcon() }}</span></div>
+            <div>
+              <p class="section-title">Recommended Path: <strong>{{ result()!.recommended_path.toUpperCase() }}</strong></p>
+              <p class="section-sub">Timeline: {{ result()!.timeline_months }} months</p>
+            </div>
+          </div>
+          <p class="path-explanation">{{ result()!.path_explanation }}</p>
+          @if (result()!.salary_potential) {
+            <div class="salary-chip">
+              <span class="material-icons">payments</span>
+              Salary potential: ${{ result()!.salary_potential!.toLocaleString() }}
+            </div>
+          }
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="section-header">
+              <div class="section-icon section-icon--cyan"><span class="material-icons">school</span></div>
+              <div><p class="section-title">Skills to Learn</p></div>
+            </div>
+            <div class="chips">
+              @for (s of result()!.skills_to_learn; track s) {
+                <button class="chip chip--cyan chip--clickable" (click)="onSkillClick(s)" type="button">
+                  {{ s }} <span class="material-icons">bolt</span>
+                </button>
+              }
+            </div>
+            <p class="chips-hint"><span class="material-icons">info</span> Click any skill to get a personalised project &amp; training plan</p>
+          </div>
+          <div class="card">
+            <div class="section-header">
+              <div class="section-icon section-icon--amber"><span class="material-icons">work_history</span></div>
+              <div>
+                <p class="section-title">Recommended Roles</p>
+                <p class="section-sub">Click any role for a personalised transition plan</p>
+              </div>
+            </div>
+            <div class="chips">
+              @for (r of result()!.recommended_roles; track r) {
+                <button class="chip chip--amber chip--clickable" (click)="onRoleClick(r)" type="button">
+                  {{ r }} <span class="material-icons">arrow_forward</span>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+        @if (trainingSessions().length > 0) {
+          <div class="card my-trainings-card">
+            <div class="section-header">
+              <div class="section-icon section-icon--cyan"><span class="material-icons">school</span></div>
+              <div style="flex:1">
+                <p class="section-title">My Active Trainings</p>
+                <p class="section-sub">Click any skill to resume your progress</p>
+              </div>
+              <a class="btn-outline" routerLink="/trainings" style="font-size:0.78rem;padding:4px 12px">
+                <span class="material-icons" style="font-size:14px">open_in_new</span>
+                View All
+              </a>
+            </div>
+            <div class="my-trainings-list">
+              @for (session of trainingSessions(); track session.id) {
+                <button class="my-training-row" type="button" (click)="onSkillClick(session.skill)">
+                  <div class="my-training-row__info">
+                    <span class="my-training-row__skill">{{ session.skill }}</span>
+                    <span class="my-training-row__steps">{{ session.completed_steps.length }}/5 steps</span>
+                  </div>
+                  <div class="my-training-row__bar">
+                    <div class="my-training-row__fill"
+                      [style.width.%]="(session.completed_steps.length / 5) * 100"
+                      [class.my-training-row__fill--done]="session.completed_steps.length === 5">
+                    </div>
+                  </div>
+                  <span class="material-icons my-training-row__arrow">chevron_right</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="result-actions">
+          <button class="btn-outline" (click)="editAndReassess()"><span class="material-icons">edit</span> Edit & Reassess</button>
+          <button class="btn-outline" (click)="resetAssessment()"><span class="material-icons">refresh</span> Start Fresh</button>
+          <a class="btn-outline" routerLink="/trainings"><span class="material-icons">fitness_center</span> My Trainings</a>
+          <a class="btn-primary" routerLink="/marketplace"><span class="material-icons">storefront</span> Browse Experts</a>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (skillTrainingLoading() || skillTraining() || skillTrainingError()) {
+  <div class="modal-overlay" (click)="closeSkillTraining()">
+    <div class="modal modal--training" (click)="$event.stopPropagation()">
+      <button class="modal__close" (click)="closeSkillTraining()" type="button">
+        <span class="material-icons">close</span>
+      </button>
+
+      @if (skillTrainingLoading()) {
+        <div class="modal__loading">
+          <span class="material-icons spin">auto_awesome</span>
+          <p>Building your personalised training plan for <strong>{{ selectedSkill() }}</strong>…</p>
+        </div>
+      }
+
+      @if (skillTrainingError()) {
+        <div class="modal__error">
+          <span class="material-icons">error_outline</span>
+          {{ skillTrainingError() }}
+        </div>
+      }
+
+      @if (skillTraining()) {
+        <div class="modal__header">
+          <div class="section-icon section-icon--cyan"><span class="material-icons">bolt</span></div>
+          <div style="flex:1">
+            <h2 class="modal__title">Learn {{ skillTraining()!.skill }}</h2>
+            <div class="modal__meta">
+              <span class="modal__badge" [style.color]="trainingDifficultyColor()">
+                <span class="material-icons">speed</span>
+                {{ skillTraining()!.difficulty | titlecase }} level
+              </span>
+              <span class="modal__badge">
+                <span class="material-icons">timer</span>
+                {{ totalTrainingHours() }}h estimated
+              </span>
+              <span class="modal__badge modal__badge--green">
+                <span class="material-icons">check_circle</span>
+                {{ completedSteps().length }}/{{ skillTraining()!.steps.length }} steps done
+              </span>
+            </div>
+            <div class="training-progress-bar">
+              <div class="training-progress-bar__fill" [style.width.%]="trainingProgress()"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="training-project-card">
+          <div class="tpc__label">
+            <span class="material-icons">rocket_launch</span> Your Project
+          </div>
+          <h3 class="tpc__title">{{ skillTraining()!.project_title }}</h3>
+          <p class="tpc__desc">{{ skillTraining()!.project_description }}</p>
+          <p class="tpc__why"><span class="material-icons">lightbulb</span> {{ skillTraining()!.why_this_project }}</p>
+          <div class="tpc__stack">
+            @for (t of skillTraining()!.tech_stack; track t) {
+              <span class="chip chip--slate chip--sm">{{ t }}</span>
+            }
+          </div>
+        </div>
+
+        @if (progressSaveError()) {
+          <div class="save-error-banner">
+            <span class="material-icons">error_outline</span>
+            {{ progressSaveError() }}
+          </div>
+        }
+
+        <p class="modal__section-label modal__section-label--lg"><span class="material-icons">checklist</span> Step-by-Step Implementation</p>
+        <div class="training-steps">
+          @for (s of skillTraining()!.steps; track s.step) {
+            <div class="ts-step" [class.ts-step--done]="isStepDone(s.step)">
+              <button class="ts-step__checkbox" type="button"
+                (click)="toggleStep(s.step)"
+                [title]="isStepDone(s.step) ? 'Mark as not done' : 'Mark as done'">
+                <span class="material-icons">
+                  {{ isStepDone(s.step) ? 'check_circle' : 'radio_button_unchecked' }}
+                </span>
+              </button>
+              <div class="ts-step__body">
+                <div class="ts-step__header">
+                  <strong>{{ s.title }}</strong>
+                  <span class="ts-step__hours">~{{ s.estimated_hours }}h</span>
+                </div>
+                <p class="ts-step__desc">{{ s.description }}</p>
+                <ul class="ts-tasks">
+                  @for (task of s.tasks; track task) {
+                    <li class="ts-tasks__item">
+                      <span class="material-icons">{{ isStepDone(s.step) ? 'check_box' : 'check_box_outline_blank' }}</span>
+                      {{ task }}
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="training-footer">
+          <div class="training-outcome">
+            <span class="material-icons">emoji_events</span>
+            <span>{{ skillTraining()!.outcome }}</span>
+          </div>
+          <div class="training-resources">
+            <p class="modal__section-label"><span class="material-icons">menu_book</span> Recommended Resources</p>
+            <div class="ts-resources">
+              @for (r of skillTraining()!.resources; track r) {
+                <span class="lp-resource"><span class="material-icons">bookmark</span>{{ r }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (roleDetailLoading() || roleDetail() || roleDetailError()) {
+  <div class="modal-overlay" (click)="closeRoleDetail()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <button class="modal__close" (click)="closeRoleDetail()" type="button">
+        <span class="material-icons">close</span>
+      </button>
+
+      @if (roleDetailLoading()) {
+        <div class="modal__loading">
+          <span class="material-icons spin">auto_awesome</span>
+          <p>Building your personalised roadmap…</p>
+        </div>
+      }
+
+      @if (roleDetailError()) {
+        <div class="modal__error">
+          <span class="material-icons">error_outline</span>
+          {{ roleDetailError() }}
+        </div>
+      }
+
+      @if (roleDetail()) {
+        <div class="modal__header">
+          <div class="section-icon section-icon--amber"><span class="material-icons">work_history</span></div>
+          <div>
+            <h2 class="modal__title">{{ roleDetail()!.role }}</h2>
+            <div class="modal__meta">
+              <span class="modal__badge" [style.color]="difficultyColor()">
+                <span class="material-icons">speed</span>
+                {{ roleDetail()!.difficulty | titlecase }} difficulty
+              </span>
+              <span class="modal__badge">
+                <span class="material-icons">schedule</span>
+                {{ roleDetail()!.timeline_months }} months
+              </span>
+              <span class="modal__badge modal__badge--green">
+                <span class="material-icons">payments</span>
+                {{ roleDetail()!.salary_range }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <p class="modal__overview">{{ roleDetail()!.overview }}</p>
+
+        <div class="modal__two-col">
+          <div>
+            <p class="modal__section-label"><span class="material-icons">check_circle</span> Skills You Already Have</p>
+            <div class="chips chips--sm">
+              @for (s of roleDetail()!.skills_you_have; track s) {
+                <span class="chip chip--green">{{ s }}</span>
+              }
+              @if (!roleDetail()!.skills_you_have.length) {
+                <span class="modal__empty">None identified — great opportunity to build from scratch!</span>
+              }
+            </div>
+          </div>
+          <div>
+            <p class="modal__section-label"><span class="material-icons">school</span> Skills to Acquire</p>
+            <div class="chips chips--sm">
+              @for (s of roleDetail()!.skills_to_acquire; track s) {
+                <button class="chip chip--cyan chip--clickable" type="button" (click)="goLearnSkill(s)">
+                  {{ s }} <span class="material-icons">school</span>
+                </button>
+              }
+            </div>
+            <p class="chips-hint"><span class="material-icons">info</span> Click any skill to generate a training plan</p>
+          </div>
+        </div>
+
+        <p class="modal__section-label modal__section-label--lg"><span class="material-icons">route</span> Your Learning Path</p>
+        <div class="learning-path">
+          @for (step of roleDetail()!.learning_path; track step.step) {
+            <div class="lp-step">
+              <div class="lp-step__number">{{ step.step }}</div>
+              <div class="lp-step__body">
+                <div class="lp-step__header">
+                  <strong>{{ step.title }}</strong>
+                  <span class="lp-step__duration">{{ step.duration_months }} month{{ step.duration_months !== 1 ? 's' : '' }}</span>
+                </div>
+                <p class="lp-step__desc">{{ step.description }}</p>
+                @if (step.resources.length) {
+                  <div class="lp-step__resources">
+                    @for (r of step.resources; track r) {
+                      <span class="lp-resource"><span class="material-icons">bookmark</span>{{ r }}</span>
+                    }
+                  </div>
+                }
+                <button class="lp-learn-btn" type="button" (click)="goLearnSkill(step.title)">
+                  <span class="material-icons">school</span>
+                  Start Learning
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

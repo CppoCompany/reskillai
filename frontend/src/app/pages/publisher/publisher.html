@@ -1,0 +1,460 @@
+<div class="page">
+  <div class="orb orb--amber"></div>
+  <div class="orb orb--cyan"></div>
+  <app-navbar />
+  <div class="wrapper">
+
+    <!-- Header -->
+    <div class="pub-header">
+      <div class="pub-header__left">
+        <div>
+          <h1 class="pub-header__title">Publisher Portal</h1>
+          <p class="pub-header__sub">Post positions and discover matching talent.</p>
+        </div>
+      </div>
+      @if (!accessError() && !pageLoading()) {
+        <div class="pub-header__actions">
+          <button class="btn-outline" (click)="openProfile()" type="button">
+            <span class="material-icons">account_circle</span> My Profile
+          </button>
+          <button class="btn-primary" (click)="openForm()" type="button">
+            Post a Position
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Access error (non-business user) -->
+    @if (accessError()) {
+      <div class="access-error card">
+        <span class="material-icons">lock</span>
+        <p>{{ accessError() }}</p>
+        <a class="btn-primary" routerLink="/sign-up" [queryParams]="{ role: 'business' }">
+          <span class="material-icons">business</span> Sign Up as Employer
+        </a>
+      </div>
+    }
+
+    <!-- Page loading -->
+    @else if (pageLoading()) {
+      <div class="page-loading">
+        <span class="material-icons spin">sync</span>
+        <p>Loading your portal…</p>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @else if (positions().length === 0) {
+      <div class="empty-state card">
+        <h2 class="empty-state__title">No positions yet</h2>
+        <p class="empty-state__sub">Post your first position and our AI will instantly find the best matching candidates from our expert pool.</p>
+      </div>
+    }
+
+    <!-- Two-panel layout -->
+    @else {
+      <div class="pub-layout">
+
+        <!-- ── Position list ── -->
+        <div class="position-list">
+          <p class="position-list__heading">
+            <span class="material-icons">list</span>
+            {{ positions().length }} Position{{ positions().length !== 1 ? 's' : '' }}
+          </p>
+          @for (pos of positions(); track pos.id) {
+            <button class="pos-card"
+              type="button"
+              [class.pos-card--active]="activePosition()?.id === pos.id"
+              [class.pos-card--closed]="pos.status === 'closed'"
+              (click)="selectPosition(pos)">
+              <div class="pos-card__top">
+                <span class="pos-card__title">{{ pos.title }}</span>
+                <span class="pos-card__status" [class.pos-card__status--closed]="pos.status === 'closed'">
+                  {{ pos.status === 'open' ? 'Open' : 'Closed' }}
+                </span>
+              </div>
+              <div class="pos-card__meta">
+                <span class="material-icons">people</span> {{ pos.match_count }} match{{ pos.match_count !== 1 ? 'es' : '' }}
+                &nbsp;·&nbsp;
+                <span class="material-icons">work</span> {{ pos.employment_type | titlecase }}
+                &nbsp;·&nbsp;
+                <span class="material-icons">location_on</span> {{ pos.work_type | titlecase }}
+              </div>
+            </button>
+          }
+        </div>
+
+        <!-- ── Position detail ── -->
+        <div class="position-detail">
+
+          @if (activePosition()) {
+            <!-- Position info card -->
+            <div class="card detail-card">
+              <div class="detail-card__header">
+                <div>
+                  <h2 class="detail-card__title">{{ activePosition()!.title }}</h2>
+                  <div class="detail-card__chips">
+                    <span class="chip chip--slate chip--sm">{{ activePosition()!.employment_type | titlecase }}</span>
+                    <span class="chip chip--slate chip--sm">{{ activePosition()!.work_type | titlecase }}</span>
+                    @if (activePosition()!.location) {
+                      <span class="chip chip--slate chip--sm">
+                        <span class="material-icons" style="font-size:13px">location_on</span>
+                        {{ activePosition()!.location }}
+                      </span>
+                    }
+                    <span class="chip chip--slate chip--sm">
+                      <span class="material-icons" style="font-size:13px">school</span>
+                      {{ eduLabel(activePosition()!.education_level) }}
+                    </span>
+                    <span class="chip chip--slate chip--sm">
+                      <span class="material-icons" style="font-size:13px">trending_up</span>
+                      {{ activePosition()!.required_experience }}+ yrs
+                    </span>
+                  </div>
+                </div>
+                <div class="detail-card__actions">
+                  <span class="salary-badge">
+                    <span class="material-icons">attach_money</span>
+                    {{ salaryDisplay(activePosition()!) }}
+                  </span>
+                  <button class="btn-outline btn-sm"
+                    type="button"
+                    (click)="runRematch()"
+                    [disabled]="rematchLoading()"
+                    title="Re-run AI matching with current expert pool">
+                    <span class="material-icons" [class.spin]="rematchLoading()">refresh</span>
+                    {{ rematchLoading() ? 'Matching…' : 'Refresh Matches' }}
+                  </button>
+                  <button class="btn-outline btn-sm"
+                    type="button"
+                    (click)="openEditForm(activePosition()!)">
+                    <span class="material-icons">edit</span> Edit
+                  </button>
+                  <button class="btn-outline btn-sm"
+                    type="button"
+                    (click)="toggleStatus(activePosition()!)">
+                    <span class="material-icons">{{ activePosition()!.status === 'open' ? 'lock' : 'lock_open' }}</span>
+                    {{ activePosition()!.status === 'open' ? 'Close' : 'Reopen' }}
+                  </button>
+                </div>
+              </div>
+
+              <p class="detail-card__desc">{{ activePosition()!.description }}</p>
+
+              @if (activePosition()!.required_skills.length) {
+                <div class="detail-card__skills">
+                  <p class="detail-card__label"><span class="material-icons">code</span> Required Skills</p>
+                  <div class="chips-row">
+                    @for (s of activePosition()!.required_skills; track s) {
+                      <span class="chip chip--cyan chip--sm">{{ s }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Matches section -->
+            <div class="matches-section">
+              <p class="matches-heading">
+                <span class="material-icons">group</span>
+                Matched Experts
+                <span class="matches-count">{{ matches().length }} candidate{{ matches().length !== 1 ? 's' : '' }}</span>
+              </p>
+
+              @if (matchesLoading()) {
+                <div class="matches-loading">
+                  <span class="material-icons spin">stars</span>
+                  <p>Finding best matches…</p>
+                </div>
+              } @else if (matches().length === 0) {
+                <div class="no-matches card">
+                  <span class="material-icons">search</span>
+                  <p>No matches found yet. Make sure experts have completed career assessments.</p>
+                </div>
+              } @else {
+                <div class="match-list">
+                  @for (m of matches(); track m.id) {
+                    <div class="match-card card">
+                      <div class="match-card__score-col">
+                        <div class="score-ring" [ngClass]="matchScoreClass(m.match_score)">
+                          {{ m.match_score }}%
+                        </div>
+                        <span class="score-label">Match</span>
+                      </div>
+                      <div class="match-card__body">
+                        <div class="match-card__meta">
+                          <span class="chip chip--slate chip--sm">
+                            <span class="material-icons" style="font-size:13px">trending_up</span>
+                            {{ m.years_experience }} yrs exp
+                          </span>
+                          <span class="chip chip--slate chip--sm">{{ m.current_industry }}</span>
+                          <span class="chip chip--slate chip--sm">{{ eduLabel(m.education_level) }}</span>
+                          @if (m.risk_level) {
+                            <span class="chip chip--sm" [ngClass]="riskBadgeClass(m.risk_level)">
+                              AI Risk: {{ m.risk_level | titlecase }}
+                            </span>
+                          }
+                        </div>
+                        <p class="match-card__explanation">{{ m.match_explanation }}</p>
+                        @if (m.matched_skills.length) {
+                          <div class="match-card__skills">
+                            @for (s of m.matched_skills; track s) {
+                              <span class="chip chip--cyan chip--sm">{{ s }}</span>
+                            }
+                          </div>
+                        }
+                        <!-- Feedback row -->
+                        <div class="match-feedback">
+                          <button class="feedback-btn"
+                            [class.feedback-btn--yes]="m.is_relevant === true"
+                            (click)="setRelevance(m, true)" type="button"
+                            title="Mark as relevant">
+                            <span class="material-icons">thumb_up</span>
+                            Relevant
+                          </button>
+                          <button class="feedback-btn"
+                            [class.feedback-btn--no]="m.is_relevant === false"
+                            (click)="setRelevance(m, false)" type="button"
+                            title="Mark as not relevant">
+                            <span class="material-icons">thumb_down</span>
+                            Not Relevant
+                          </button>
+                          <button class="feedback-btn"
+                            (click)="openComment(m)" type="button"
+                            title="Add comment">
+                            <span class="material-icons">chat_bubble_outline</span>
+                            {{ m.comment ? 'Edit Note' : 'Add Note' }}
+                          </button>
+                        </div>
+                        @if (editingCommentId() === m.id) {
+                          <div class="comment-edit">
+                            <textarea class="input-dark textarea" [(ngModel)]="commentDraft"
+                              rows="2" placeholder="Your private note about this candidate…"></textarea>
+                            <div class="comment-edit__actions">
+                              <button class="btn-outline btn-sm" (click)="cancelComment()" type="button">Cancel</button>
+                              <button class="btn-primary btn-sm" (click)="saveComment(m)" type="button">Save Note</button>
+                            </div>
+                          </div>
+                        }
+                        @if (m.comment && editingCommentId() !== m.id) {
+                          <div class="match-comment">
+                            <span class="material-icons">sticky_note_2</span>
+                            {{ m.comment }}
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ── Profile modal ── -->
+@if (showProfile()) {
+  <div class="modal-backdrop" (click)="closeProfile()">
+    <div class="modal modal--publisher" (click)="$event.stopPropagation()">
+      <button class="modal__close" (click)="closeProfile()" type="button">✕</button>
+      <div class="modal__header"><h2>My Business Profile</h2></div>
+
+      @if (profileLoading()) {
+        <div class="modal__body modal__body--center">
+          <span class="material-icons spin">sync</span>
+          <p>Loading profile…</p>
+        </div>
+      } @else if (profile()) {
+        <div class="modal__body pub-form">
+          <div class="profile-user-row">
+            <div class="profile-user-row__avatar">
+              <span class="material-icons">account_circle</span>
+            </div>
+            <div>
+              @if (profile()!.user.full_name) {
+                <div class="profile-user-row__name">{{ profile()!.user.full_name }}</div>
+              }
+              <div class="profile-user-row__email">{{ profile()!.user.email }}</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Company Name *</label>
+            <input class="input-dark" [(ngModel)]="profileDraft.company_name" placeholder="Acme Corp" />
+          </div>
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Industry</label>
+              <input class="input-dark" [(ngModel)]="profileDraft.industry" placeholder="Technology" />
+            </div>
+            <div class="form-row">
+              <label>Company Size</label>
+              <select class="input-dark" [(ngModel)]="profileDraft.company_size">
+                <option value="1-10">1–10</option>
+                <option value="11-50">11–50</option>
+                <option value="51-200">51–200</option>
+                <option value="200+">200+</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Location</label>
+              <input class="input-dark" [(ngModel)]="profileDraft.location" placeholder="Tel Aviv, Israel" />
+            </div>
+            <div class="form-row">
+              <label>Website</label>
+              <input class="input-dark" [(ngModel)]="profileDraft.website" placeholder="https://..." />
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Description</label>
+            <textarea class="input-dark textarea" [(ngModel)]="profileDraft.description" rows="3"
+              placeholder="What does your company do?"></textarea>
+          </div>
+          <div class="form-row">
+            <label>Hiring Needs <span class="form-hint">(comma separated)</span></label>
+            <input class="input-dark" [(ngModel)]="profileNeedsRaw" placeholder="Frontend developers, AI engineers" />
+          </div>
+          <div class="form-row">
+            <label>Budget Range</label>
+            <select class="input-dark" [(ngModel)]="profileDraft.budget_range">
+              <option value="under_1k">Under $1k/mo</option>
+              <option value="1k_5k">$1k – $5k/mo</option>
+              <option value="5k_20k">$5k – $20k/mo</option>
+              <option value="20k+">$20k+/mo</option>
+            </select>
+          </div>
+          @if (profileError()) {
+            <div class="form-error">
+              <span class="material-icons">error_outline</span> {{ profileError() }}
+            </div>
+          }
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn-outline" (click)="closeProfile()" type="button">Cancel</button>
+          <button class="btn-primary" (click)="saveProfile()" [disabled]="profileSaving()" type="button">
+            @if (profileSaving()) { Saving… } @else { Save Changes }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- ── Position form modal ── -->
+@if (showForm()) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <div class="modal modal--publisher" (click)="$event.stopPropagation()">
+      <button class="modal__close" (click)="closeForm()" type="button">✕</button>
+
+      <!-- Step 1: Fill form -->
+      @if (formStep() === 1) {
+        <div class="modal__header">
+          <h2>{{ editingId() ? 'Edit Position' : 'New Position' }}</h2>
+        </div>
+
+        <div class="modal__body pub-form">
+          <div class="form-row">
+            <label>Position Title *</label>
+            <input class="input-dark" [(ngModel)]="draft.title" placeholder="e.g. Senior React Developer" />
+          </div>
+
+          <div class="form-row">
+            <label>Description *</label>
+            <textarea class="input-dark textarea" [(ngModel)]="draft.description"
+              placeholder="Describe the role, responsibilities, and what a great candidate looks like…" rows="4"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label>Required Skills <span class="form-hint">(comma separated)</span></label>
+            <input class="input-dark" [(ngModel)]="skillsRaw" placeholder="React, TypeScript, Node.js" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Min Experience (years) *</label>
+              <input class="input-dark" type="number" [(ngModel)]="draft.required_experience" min="0" />
+            </div>
+            <div class="form-row">
+              <label>Education Level</label>
+              <select class="input-dark" [(ngModel)]="draft.education_level">
+                <option value="high_school">High School</option>
+                <option value="bachelor">Bachelor</option>
+                <option value="master">Master</option>
+                <option value="phd">PhD</option>
+                <option value="other">Other / Any</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Work Type</label>
+              <select class="input-dark" [(ngModel)]="draft.work_type">
+                <option value="remote">Remote</option>
+                <option value="onsite">On-site</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Employment Type</label>
+              <select class="input-dark" [(ngModel)]="draft.employment_type">
+                <option value="full_time">Full Time</option>
+                <option value="part_time">Part Time</option>
+                <option value="contract">Contract</option>
+                <option value="freelance">Freelance</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Location</label>
+            <input class="input-dark" [(ngModel)]="draft.location" placeholder="City, Country or Remote" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-row">
+              <label>Salary Min (USD / year)</label>
+              <input class="input-dark" type="number" [(ngModel)]="draft.salary_min" placeholder="e.g. 60000" />
+            </div>
+            <div class="form-row">
+              <label>Salary Max (USD / year)</label>
+              <input class="input-dark" type="number" [(ngModel)]="draft.salary_max" placeholder="e.g. 100000" />
+            </div>
+          </div>
+
+          @if (formError()) {
+            <div class="form-error">
+              <span class="material-icons">error_outline</span> {{ formError() }}
+            </div>
+          }
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn-outline" (click)="closeForm()" type="button">Cancel</button>
+          <button class="btn-primary" (click)="submitPosition()"
+            [disabled]="postLoading() || !draft.title || !draft.description" type="button">
+            {{ editingId() ? 'Save &amp; Rematch' : 'Publish &amp; Find Matches' }}
+          </button>
+        </div>
+      }
+
+      <!-- Step 2: Posting / matching in progress -->
+      @else if (formStep() === 2) {
+        <div class="modal__body modal__body--center">
+          <span class="material-icons spin pub-spin">stars</span>
+          <h2>{{ editingId() ? 'Updating &amp; Rematching…' : 'Finding matching experts…' }}</h2>
+          <p>Our AI is scanning the expert pool and ranking candidates for your position. This takes a few seconds.</p>
+        </div>
+      }
+
+    </div>
+  </div>
+}

@@ -1,0 +1,156 @@
+<div class="page">
+  <div class="orb"></div>
+
+  <div class="wrapper">
+    <div class="page-header">
+      <span class="material-icons page-header__icon">auto_awesome</span>
+      <h1 class="page-header__title">Complete Your Profile</h1>
+      <p class="page-header__sub">Tell us about yourself so we can personalise your experience.</p>
+    </div>
+
+    @if (error) {
+      <div class="error-banner">{{ error }}</div>
+    }
+
+    @if (userType === 'expert') {
+      <div class="card card-glow">
+        <div class="section-header">
+          <span class="material-icons section-icon section-icon--amber">person</span>
+          <div>
+            <div class="section-title">Expert Profile</div>
+            <div class="section-sub">Share your professional background</div>
+          </div>
+        </div>
+
+        <form (ngSubmit)="submitExpert()">
+          <div class="form-grid form-field">
+            <div>
+              <label class="form-label">Profession</label>
+              <input [(ngModel)]="expert.profession" name="profession" required
+                     class="input-dark" placeholder="Senior Analyst" />
+            </div>
+            <div>
+              <label class="form-label">Years of Experience</label>
+              <input type="number" [(ngModel)]="expert.years_experience" name="years_experience" required
+                     class="input-dark" placeholder="10" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Skills (comma-separated)</label>
+            <input [(ngModel)]="expertSkillsRaw" name="skills"
+                   class="input-dark" placeholder="Python, SQL, Product Strategy" />
+          </div>
+          <div class="form-grid form-field">
+            <div>
+              <label class="form-label">Industries</label>
+              <input [(ngModel)]="expertIndustriesRaw" name="industries"
+                     class="input-dark" placeholder="Fintech, Healthcare" />
+            </div>
+            <div>
+              <label class="form-label">Languages</label>
+              <input [(ngModel)]="expertLanguagesRaw" name="languages"
+                     class="input-dark" placeholder="English, Hebrew" />
+            </div>
+          </div>
+          <div class="form-grid form-field">
+            <div>
+              <label class="form-label">Hourly Rate (USD)</label>
+              <input type="number" [(ngModel)]="expert.hourly_rate" name="hourly_rate"
+                     class="input-dark" placeholder="150" />
+            </div>
+            <div>
+              <label class="form-label">Availability</label>
+              <select [(ngModel)]="expert.availability" name="availability" class="input-dark">
+                <option value="full_time">Full Time</option>
+                <option value="part_time">Part Time</option>
+                <option value="project_based">Project Based</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-field form-field--last">
+            <label class="form-label">Bio (optional)</label>
+            <textarea [(ngModel)]="expert.bio" name="bio" rows="3"
+                      class="input-dark textarea-resize"
+                      placeholder="Briefly describe your expertise..."></textarea>
+          </div>
+          <button type="submit" [disabled]="loading" class="btn-primary w-full">
+            @if (loading) { Saving... } @else { Complete Profile }
+          </button>
+        </form>
+      </div>
+    }
+
+    @if (userType === 'business') {
+      <div class="card card-glow">
+        <div class="section-header">
+          <span class="material-icons section-icon section-icon--cyan">business</span>
+          <div>
+            <div class="section-title">Business Profile</div>
+            <div class="section-sub">Tell us about your company and hiring needs</div>
+          </div>
+        </div>
+
+        <form (ngSubmit)="submitBusiness()">
+          <div class="form-grid form-field">
+            <div>
+              <label class="form-label">Company Name</label>
+              <input [(ngModel)]="business.company_name" name="company_name" required
+                     class="input-dark" placeholder="Acme Corp" />
+            </div>
+            <div>
+              <label class="form-label">Industry</label>
+              <input [(ngModel)]="business.industry" name="industry" required
+                     class="input-dark" placeholder="SaaS, Fintech..." />
+            </div>
+          </div>
+          <div class="form-grid form-field">
+            <div>
+              <label class="form-label">Company Size</label>
+              <select [(ngModel)]="business.company_size" name="company_size" class="input-dark">
+                <option value="1-10">1 - 10</option>
+                <option value="11-50">11 - 50</option>
+                <option value="51-200">51 - 200</option>
+                <option value="200+">200+</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Budget Range</label>
+              <select [(ngModel)]="business.budget_range" name="budget_range" class="input-dark">
+                <option value="under_1k">Under $1k</option>
+                <option value="1k_5k">$1k - $5k</option>
+                <option value="5k_20k">$5k - $20k</option>
+                <option value="20k+">$20k+</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Needs / Expertise Required (comma-separated)</label>
+            <input [(ngModel)]="businessNeedsRaw" name="needs"
+                   class="input-dark" placeholder="Data Analysis, Strategy, Product..." />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Website (optional)</label>
+            <input [(ngModel)]="business.website" name="website"
+                   class="input-dark" placeholder="https://yourcompany.com" />
+          </div>
+          <div class="form-field form-field--last">
+            <label class="form-label">Description (optional)</label>
+            <textarea [(ngModel)]="business.description" name="description" rows="3"
+                      class="input-dark textarea-resize"
+                      placeholder="What does your company do?"></textarea>
+          </div>
+          <button type="submit" [disabled]="loading" class="btn-primary w-full">
+            @if (loading) { Saving... } @else { Complete Profile }
+          </button>
+        </form>
+      </div>
+    }
+
+    @if (!userType) {
+      <div class="loading-state">
+        <span class="material-icons loading-state__icon">hourglass_empty</span>
+        Loading your profile...
+      </div>
+    }
+  </div>
+</div>

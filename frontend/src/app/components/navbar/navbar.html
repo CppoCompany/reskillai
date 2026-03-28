@@ -1,0 +1,12 @@
+<nav class="nav">
+  <div class="nav__inner">
+    <a class="nav__logo" routerLink="/dashboard">
+      <span class="nav__logo-text">ReSkill<span>AI</span></span>
+    </a>
+    <div class="nav__right">
+      <ng-content />
+      <a class="nav__link" routerLink="/dashboard">Dashboard</a>
+      <button class="nav__signout" (click)="signOut()" type="button">Sign Out</button>
+    </div>
+  </div>
+</nav>

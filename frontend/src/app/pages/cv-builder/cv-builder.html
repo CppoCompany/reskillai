@@ -1,0 +1,188 @@
+<div class="page">
+  <div class="orb orb--amber"></div>
+  <div class="orb orb--cyan"></div>
+  <app-navbar />
+  <div class="wrapper">
+
+    <div class="page-header">
+      <span class="material-icons page-header__icon">auto_fix_high</span>
+      <h1 class="page-header__title">AI CV Builder</h1>
+      <p class="page-header__sub">Let Claude rewrite your CV to be more professional, impactful, and ATS-ready.</p>
+    </div>
+
+    <div class="input-card card">
+      <div class="section-header">
+        <div class="section-icon section-icon--amber"><span class="material-icons">edit_document</span></div>
+        <div>
+          <p class="section-title">Your CV</p>
+          <p class="section-sub">Paste or edit your CV below. We'll pre-fill it from your saved profile if available.</p>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Target Role <span class="form-hint">(optional — tailors the rewrite)</span></label>
+        <input class="input-dark" type="text" [(ngModel)]="targetRole" placeholder="e.g. Senior Product Manager, Data Scientist" />
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">CV / Resume Text *</label>
+        <textarea class="input-dark cv-textarea" [(ngModel)]="cvText" placeholder="Paste your CV here…" rows="16"></textarea>
+      </div>
+
+      @if (error()) {
+        <div class="error-banner">
+          <span class="material-icons">error_outline</span>
+          {{ error() }}
+        </div>
+      }
+
+      <div class="form-actions">
+        <button class="btn-primary" (click)="improve()" [disabled]="loading() || !cvText.trim()">
+          @if (loading()) {
+            <span class="material-icons spin">auto_awesome</span> Improving your CV…
+          } @else {
+            <span class="material-icons">auto_fix_high</span> Improve with AI
+          }
+        </button>
+      </div>
+    </div>
+
+    @if (result()) {
+      <div class="improvements-bar card">
+        <p class="improvements-bar__title">
+          <span class="material-icons">check_circle</span>
+          What Claude improved
+        </p>
+        <ul class="improvements-list">
+          @for (imp of result()!.improvements; track imp) {
+            <li class="improvements-list__item">
+              <span class="material-icons">arrow_right</span>
+              {{ imp }}
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Template selector -->
+      <div class="template-selector card">
+        <div class="section-header">
+          <div class="section-icon section-icon--amber"><span class="material-icons">style</span></div>
+          <div>
+            <p class="section-title">Choose a Template</p>
+            <p class="section-sub">Select a professional style, then export as DOCX or PDF.</p>
+          </div>
+        </div>
+        <div class="template-cards">
+
+          <!-- Classic -->
+          <button class="template-card" type="button"
+            [class.template-card--active]="selectedTemplate() === 'classic'"
+            (click)="selectedTemplate.set('classic')">
+            <div class="tc-preview tc-preview--classic">
+              <div class="tc-name">JOHN DOE</div>
+              <div class="tc-contact">john&#64;example.com · New York</div>
+              <div class="tc-rule tc-rule--classic"></div>
+              <div class="tc-section tc-section--classic">EXPERIENCE</div>
+              <div class="tc-rule tc-rule--classic"></div>
+              <div class="tc-body"></div>
+              <div class="tc-body tc-body--sm"></div>
+              <div class="tc-bullet tc-bullet--classic"></div>
+              <div class="tc-bullet tc-bullet--classic tc-bullet--sm"></div>
+            </div>
+            <div class="tc-label">Classic</div>
+            <div class="tc-sub">Timeless &amp; Elegant</div>
+            @if (selectedTemplate() === 'classic') {
+              <span class="tc-check material-icons">check_circle</span>
+            }
+          </button>
+
+          <!-- Modern -->
+          <button class="template-card" type="button"
+            [class.template-card--active]="selectedTemplate() === 'modern'"
+            (click)="selectedTemplate.set('modern')">
+            <div class="tc-preview tc-preview--modern">
+              <div class="tc-name tc-name--modern">John Doe</div>
+              <div class="tc-contact tc-contact--modern">john&#64;example.com · New York</div>
+              <div class="tc-section tc-section--modern">Experience</div>
+              <div class="tc-rule tc-rule--modern"></div>
+              <div class="tc-body"></div>
+              <div class="tc-body tc-body--sm"></div>
+              <div class="tc-bullet tc-bullet--modern"></div>
+              <div class="tc-bullet tc-bullet--modern tc-bullet--sm"></div>
+            </div>
+            <div class="tc-label">Modern</div>
+            <div class="tc-sub">Bold &amp; Contemporary</div>
+            @if (selectedTemplate() === 'modern') {
+              <span class="tc-check material-icons">check_circle</span>
+            }
+          </button>
+
+          <!-- Minimal -->
+          <button class="template-card" type="button"
+            [class.template-card--active]="selectedTemplate() === 'minimal'"
+            (click)="selectedTemplate.set('minimal')">
+            <div class="tc-preview tc-preview--minimal">
+              <div class="tc-name tc-name--minimal">John Doe</div>
+              <div class="tc-rule tc-rule--minimal"></div>
+              <div class="tc-contact tc-contact--minimal">john&#64;example.com · New York</div>
+              <div class="tc-section tc-section--minimal">EXPERIENCE</div>
+              <div class="tc-rule tc-rule--minimal tc-rule--light"></div>
+              <div class="tc-body tc-body--minimal"></div>
+              <div class="tc-body tc-body--minimal tc-body--sm"></div>
+              <div class="tc-bullet tc-bullet--minimal"></div>
+            </div>
+            <div class="tc-label">Minimal</div>
+            <div class="tc-sub">Clean &amp; Refined</div>
+            @if (selectedTemplate() === 'minimal') {
+              <span class="tc-check material-icons">check_circle</span>
+            }
+          </button>
+
+        </div>
+
+        <div class="export-actions">
+          <button class="btn-primary" (click)="exportCV('docx')" [disabled]="exporting()" type="button">
+            @if (exporting()) {
+              <span class="material-icons spin">sync</span> Exporting…
+            } @else {
+              <span class="material-icons">description</span> Export DOCX
+            }
+          </button>
+          <button class="btn-outline" (click)="exportCV('pdf')" [disabled]="exporting()" type="button">
+            @if (exporting()) {
+              <span class="material-icons spin">sync</span> Exporting…
+            } @else {
+              <span class="material-icons">picture_as_pdf</span> Export PDF
+            }
+          </button>
+        </div>
+      </div>
+
+      <div class="result-panel card">
+        <div class="result-panel__header">
+          <div class="section-icon section-icon--green"><span class="material-icons">task_alt</span></div>
+          <div>
+            <p class="section-title">Improved CV</p>
+            <p class="section-sub">Professional, ATS-optimised and ready to use</p>
+          </div>
+          <div class="result-actions">
+            <button class="btn-outline btn-sm" (click)="copyToClipboard()" type="button">
+              <span class="material-icons">{{ copied() ? 'check' : 'content_copy' }}</span>
+              {{ copied() ? 'Copied!' : 'Copy' }}
+            </button>
+            <button class="btn-primary btn-sm" (click)="saveAsMyCV()" [disabled]="saving() || cvSaved()" type="button">
+              @if (saving()) {
+                <span class="material-icons spin">sync</span> Saving…
+              } @else if (cvSaved()) {
+                <span class="material-icons">check</span> Saved to profile
+              } @else {
+                <span class="material-icons">save</span> Save as my CV
+              }
+            </button>
+          </div>
+        </div>
+        <pre class="cv-output">{{ result()!.improved_cv }}</pre>
+      </div>
+    }
+  </div>
+</div>

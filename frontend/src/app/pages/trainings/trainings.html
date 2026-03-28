@@ -1,0 +1,237 @@
+<div class="page">
+  <div class="orb orb--amber"></div>
+  <div class="orb orb--cyan"></div>
+  <app-navbar />
+  <div class="wrapper">
+
+    <div class="page-header">
+      <div class="page-header__top">
+        <span class="material-icons page-header__icon">fitness_center</span>
+        <h1 class="page-header__title">My Training Journey</h1>
+      </div>
+      <p class="page-header__sub">Resume your hands-on learning projects and track your progress.</p>
+    </div>
+
+    @if (pageLoading()) {
+      <div class="page-loading">
+        <span class="material-icons spin">sync</span>
+        <p>Loading your trainings…</p>
+      </div>
+    }
+
+    @else if (sessions().length === 0) {
+      <div class="empty-state card">
+        <span class="material-icons empty-state__icon">school</span>
+        <h2 class="empty-state__title">No trainings yet</h2>
+        <p class="empty-state__sub">Go to your assessment results and click on any skill to generate a personalised project-based training plan.</p>
+        <a class="btn-primary" routerLink="/assessment">
+          <span class="material-icons">assessment</span>
+          Go to Assessment
+        </a>
+      </div>
+    }
+
+    @else {
+      <div class="trainings-layout">
+
+        <!-- ── Session list ── -->
+        <div class="session-list">
+          <p class="session-list__heading">
+            <span class="material-icons">list</span>
+            {{ sessions().length }} Training{{ sessions().length !== 1 ? 's' : '' }}
+          </p>
+          @for (session of sessions(); track session.id) {
+            <button class="session-card"
+              type="button"
+              [class.session-card--active]="selectedSkill() === session.skill"
+              [class.session-card--done]="isComplete(session)"
+              (click)="selectSession(session.skill)">
+
+              <div class="session-card__top">
+                <span class="session-card__skill">{{ session.skill }}</span>
+                @if (isComplete(session)) {
+                  <span class="session-card__badge session-card__badge--done">
+                    <span class="material-icons">check_circle</span> Done
+                  </span>
+                } @else {
+                  <span class="session-card__badge">
+                    {{ session.completed_steps.length }}/5
+                  </span>
+                }
+              </div>
+
+              <div class="session-card__bar">
+                <div class="session-card__fill"
+                  [style.width.%]="sessionProgress(session)"
+                  [class.session-card__fill--done]="isComplete(session)">
+                </div>
+              </div>
+
+              <span class="session-card__pct">{{ sessionProgress(session) }}% complete</span>
+            </button>
+          }
+        </div>
+
+        <!-- ── Training detail ── -->
+        <div class="training-detail">
+
+          @if (activeLoading()) {
+            <div class="detail-loading card">
+              <span class="material-icons spin">auto_awesome</span>
+              <p>Loading training plan…</p>
+            </div>
+          }
+
+          @else if (saveError()) {
+            <div class="save-error">
+              <span class="material-icons">error_outline</span>
+              {{ saveError() }}
+            </div>
+          }
+
+          @if (activeSession()) {
+            <!-- Project card -->
+            <div class="project-card card">
+              <div class="project-card__meta">
+                <span class="difficulty-badge" [style.color]="difficultyColor()">
+                  <span class="material-icons">speed</span>
+                  {{ activeSession()!.training_data.difficulty | titlecase }}
+                </span>
+                <span class="meta-badge">
+                  <span class="material-icons">timer</span>
+                  {{ totalHours() }}h estimated
+                </span>
+                <span class="meta-badge meta-badge--green">
+                  <span class="material-icons">check_circle</span>
+                  {{ completedSteps().length }}/{{ activeSession()!.training_data.steps.length }} steps done
+                </span>
+              </div>
+
+              <h2 class="project-card__title">{{ activeSession()!.training_data.project_title }}</h2>
+              <p class="project-card__desc">{{ activeSession()!.training_data.project_description }}</p>
+
+              <!-- Progress bar -->
+              <div class="detail-progress">
+                <div class="detail-progress__bar">
+                  <div class="detail-progress__fill"
+                    [style.width.%]="activeProgress()"
+                    [class.detail-progress__fill--done]="activeProgress() === 100">
+                  </div>
+                </div>
+                <span class="detail-progress__pct">{{ activeProgress() }}%</span>
+              </div>
+
+              <!-- Why this project -->
+              <p class="why-note">
+                <span class="material-icons">lightbulb</span>
+                {{ activeSession()!.training_data.why_this_project }}
+              </p>
+
+              <!-- Tech stack -->
+              <div class="tech-stack">
+                @for (t of activeSession()!.training_data.tech_stack; track t) {
+                  <span class="chip chip--slate">{{ t }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="card steps-card">
+              <p class="steps-heading">
+                <span class="material-icons">checklist</span>
+                Step-by-Step Implementation
+                <span class="steps-hint">Click a step to mark as done</span>
+              </p>
+
+              <div class="ts-steps">
+                @for (s of activeSession()!.training_data.steps; track s.step) {
+                  <div class="ts-step" [class.ts-step--done]="isStepDone(s.step)">
+
+                    <button class="ts-step__checkbox" type="button"
+                      (click)="toggleStep(s.step)"
+                      [title]="isStepDone(s.step) ? 'Mark as not done' : 'Mark as done'">
+                      <span class="material-icons">
+                        {{ isStepDone(s.step) ? 'check_circle' : 'radio_button_unchecked' }}
+                      </span>
+                    </button>
+
+                    <div class="ts-step__body">
+                      <div class="ts-step__header">
+                        <strong>{{ s.title }}</strong>
+                        <span class="ts-step__hours">~{{ s.estimated_hours }}h</span>
+                      </div>
+                      <p class="ts-step__desc">{{ s.description }}</p>
+                      <ul class="ts-tasks">
+                        @for (task of s.tasks; track task) {
+                          <li class="ts-tasks__item">
+                            <span class="material-icons">
+                              {{ isStepDone(s.step) ? 'check_box' : 'check_box_outline_blank' }}
+                            </span>
+                            {{ task }}
+                          </li>
+                        }
+                      </ul>
+
+                      <!-- Learn & Quiz button -->
+                      <button class="learn-btn" type="button" (click)="goToLesson(s)">
+                        <span class="material-icons">school</span>
+                        Learn & Quiz
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- AI Skills card -->
+            @if (activeSession()!.training_data.ai_skills?.length) {
+              <div class="card ai-skills-card">
+                <p class="ai-skills-heading">
+                  <span class="material-icons">auto_awesome</span>
+                  AI Skills for {{ activeSession()!.training_data.skill }}
+                  <span class="ai-skills-sub">Tools to accelerate your learning and work</span>
+                </p>
+                <div class="ai-skills-list">
+                  @for (ai of activeSession()!.training_data.ai_skills; track ai.tool) {
+                    <div class="ai-skill-item">
+                      <div class="ai-skill-item__header">
+                        <span class="ai-skill-item__tool">{{ ai.tool }}</span>
+                      </div>
+                      <p class="ai-skill-item__use-case">{{ ai.use_case }}</p>
+                      <p class="ai-skill-item__relevance">
+                        <span class="material-icons">lightbulb</span>
+                        {{ ai.relevance }}
+                      </p>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Footer: outcome + resources -->
+            <div class="card footer-card">
+              <div class="outcome-box">
+                <span class="material-icons">emoji_events</span>
+                <span>{{ activeSession()!.training_data.outcome }}</span>
+              </div>
+
+              <p class="resources-label">
+                <span class="material-icons">menu_book</span>
+                Recommended Resources
+              </p>
+              <div class="resources-list">
+                @for (r of activeSession()!.training_data.resources; track r) {
+                  <span class="resource-item">
+                    <span class="material-icons">bookmark</span>
+                    {{ r }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<div class="page">
+  <div class="orb orb--amber"></div>
+  <div class="orb orb--cyan"></div>
+
+  <div class="wrapper">
+    <div class="logo">
+      <span class="material-icons logo__icon">auto_awesome</span>
+      <div class="logo__text">ReSkill<span>AI</span></div>
+    </div>
+
+    <div class="card card-glow">
+      <div class="card-header">
+        <div class="card-header__icon">
+          <span class="material-icons">lock_open</span>
+        </div>
+        <div>
+          <h2 class="card-title">Welcome back</h2>
+          <p class="card-subtitle">Sign in to continue your AI career journey.</p>
+        </div>
+      </div>
+
+      @if (error) {
+        <div class="error-banner">
+          <span class="material-icons">error_outline</span>
+          {{ error }}
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="field">
+          <label class="field-label">Email</label>
+          <input type="email" [(ngModel)]="email" name="email" required
+                 class="input-dark" placeholder="you@example.com" />
+        </div>
+        <div class="field field--last">
+          <label class="field-label">Password</label>
+          <input type="password" [(ngModel)]="password" name="password" required
+                 class="input-dark" placeholder="••••••••" />
+        </div>
+        <button type="submit" [disabled]="loading" class="btn-primary w-full">
+          @if (loading) {
+            <span class="material-icons spin">sync</span> Signing in...
+          } @else {
+            <span class="material-icons">login</span> Sign In
+          }
+        </button>
+      </form>
+
+      <hr class="divider" />
+      <p class="footer-text">
+        No account? <a href="/sign-up">Create one free</a>
+      </p>
+    </div>
+  </div>
+</div>

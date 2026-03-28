@@ -1,0 +1,215 @@
+:host { display: block; }
+
+/* ── Page wrapper ── */
+.page {
+  min-height: 100vh;
+  background: #F8FAFC;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Ambient orbs ── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.16;
+}
+
+.orb-amber {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #F59E0B, transparent 70%);
+  top: -120px; left: -100px;
+}
+
+.orb-cyan {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, #06B6D4, transparent 70%);
+  top: 60px; right: -80px;
+}
+
+.orb-orange {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, #FB923C, transparent 70%);
+  bottom: 100px; left: 40%;
+}
+
+/* ── Nav ── */
+.nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.nav__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav__logo-icon { color: #F59E0B; font-size: 28px; }
+
+.nav__logo-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.nav__logo-accent { color: #F59E0B; }
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  a { text-decoration: none; font-size: 0.9rem; }
+}
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 2rem 4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.hero__badge { font-size: 0.75rem; padding: 0.4rem 1rem; margin-bottom: 1.5rem; }
+
+.hero__title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #0F172A;
+  max-width: 900px;
+  margin: 0 0 1.5rem;
+}
+
+.hero__subtitle {
+  color: #475569;
+  font-size: 1.15rem;
+  max-width: 560px;
+  line-height: 1.7;
+  margin: 0 0 2.5rem;
+}
+
+.hero__cta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 4rem;
+}
+
+.hero__cta-btn {
+  font-size: 1rem;
+  padding: 0.85rem 2rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero__cta-icon { font-size: 18px; }
+
+/* ── Stats ── */
+.stats {
+  display: flex;
+  gap: 3rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.stat-item { text-align: center; }
+
+.stat-item__number {
+  font-size: 2rem;
+  font-weight: 800;
+
+  &--amber  { color: #D97706; }
+  &--cyan   { color: #0891B2; }
+  &--orange { color: #EA580C; }
+}
+
+.stat-item__label {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+/* ── Feature cards ── */
+.features {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.feature-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+
+  &:hover {
+    border-color: rgba(245, 158, 11, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(245, 158, 11, 0.08);
+  }
+}
+
+.icon-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+
+  .icon-ring__icon { font-size: 30px; }
+
+  &--amber { background: rgba(245, 158, 11, 0.1); .icon-ring__icon { color: #D97706; } }
+  &--cyan  { background: rgba(6, 182, 212, 0.1);  .icon-ring__icon { color: #0891B2; } }
+  &--orange{ background: rgba(251, 146, 60, 0.1); .icon-ring__icon { color: #EA580C; } }
+}
+
+.feature-card__title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #0F172A;
+  margin: 0 0 0.5rem;
+}
+
+.feature-card__desc {
+  color: #64748B;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin: 0;
+}

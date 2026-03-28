@@ -1,0 +1,241 @@
+<div class="page">
+  <div class="orb orb--top"></div>
+
+  <app-navbar />
+
+  <div class="main">
+
+    <div class="page-header">
+      @if (user()?.user_type === 'business') {
+        <span class="material-icons page-header__icon">storefront</span>
+        <h1 class="page-header__title">Expert Marketplace</h1>
+        <p class="page-header__sub">Discover and connect with verified senior professionals.</p>
+      } @else {
+        <span class="material-icons page-header__icon">work_outline</span>
+        <h1 class="page-header__title">Job Opportunities</h1>
+        <p class="page-header__sub">Browse open positions matched to your expertise.</p>
+      }
+    </div>
+
+    <div class="toolbar">
+      <div class="filters">
+        <div class="filter-field">
+          <span class="material-icons filter-icon">search</span>
+          <input class="filter-input" type="text" [(ngModel)]="professionFilter"
+            [placeholder]="user()?.user_type === 'business' ? 'Profession...' : 'Role...'"
+            (keyup.enter)="applyFilters()" />
+        </div>
+        <div class="filter-field">
+          <span class="material-icons filter-icon">label</span>
+          <input class="filter-input" type="text" [(ngModel)]="skillsFilter"
+            placeholder="Skills (comma-separated)..."
+            (keyup.enter)="applyFilters()" />
+        </div>
+        <button class="btn-filter" (click)="applyFilters()">Search</button>
+        @if (skillsFilter || professionFilter) {
+          <button class="btn-clear" (click)="clearFilters()">
+            <span class="material-icons">close</span>
+          </button>
+        }
+      </div>
+      @if (user()?.user_type === 'business') {
+        <button class="btn-primary btn-post" (click)="openPostModal()">
+          <span class="material-icons">add</span>
+          Post a Job
+        </button>
+      }
+    </div>
+
+    @if (error()) {
+      <div class="error-banner">{{ error() }}</div>
+    }
+
+    @if (loading()) {
+      <div class="loading-state">
+        <span class="material-icons loading-state__icon spin">sync</span>
+        <p>Loading...</p>
+      </div>
+    }
+
+    <!-- BUSINESS VIEW: Expert cards -->
+    @if (!loading() && user()?.user_type === 'business') {
+      @if (experts().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons">people_outline</span>
+          <p>No experts found. Try adjusting your filters.</p>
+        </div>
+      } @else {
+        <div class="cards-grid">
+          @for (expert of experts(); track expert.id) {
+            <div class="card expert-card">
+              <div class="expert-card__header">
+                <div class="expert-avatar">
+                  {{ (expert.full_name || expert.profession).charAt(0).toUpperCase() }}
+                </div>
+                <div class="expert-card__meta">
+                  <h3 class="expert-card__name">{{ expert.full_name || 'Anonymous Expert' }}</h3>
+                  <p class="expert-card__profession">{{ expert.profession }}</p>
+                </div>
+                <span class="badge" [class]="expert.availability === 'full_time' ? 'badge-green' : 'badge-amber'">
+                  {{ availabilityLabel(expert.availability) }}
+                </span>
+              </div>
+              @if (expert.bio) {
+                <p class="expert-card__bio">{{ expert.bio }}</p>
+              }
+              <div class="expert-card__stats">
+                <div class="stat-chip"><span class="material-icons">work</span>{{ expert.years_experience }} yrs</div>
+                @if (expert.hourly_rate) {
+                  <div class="stat-chip"><span class="material-icons">payments</span>${{ expert.hourly_rate }}/hr</div>
+                }
+                @if (expert.ai_risk_score !== null) {
+                  <div class="stat-chip"><span class="material-icons">psychology</span>Risk: {{ expert.ai_risk_score }}</div>
+                }
+              </div>
+              <div class="skills-row">
+                @for (s of expert.skills.slice(0, 4); track s) {
+                  <span class="chip chip--cyan">{{ s }}</span>
+                }
+                @if (expert.skills.length > 4) {
+                  <span class="chip chip--gray">+{{ expert.skills.length - 4 }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- EXPERT VIEW: Job cards -->
+    @if (!loading() && user()?.user_type !== 'business') {
+      @if (jobs().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons">work_off</span>
+          <p>No open jobs found. Try adjusting your filters.</p>
+        </div>
+      } @else {
+        <div class="cards-grid">
+          @for (job of jobs(); track job.id) {
+            <div class="card job-card">
+              <div class="job-card__header">
+                <div class="job-card__icon"><span class="material-icons">business_center</span></div>
+                <div class="job-card__meta">
+                  <h3 class="job-card__title">{{ job.title }}</h3>
+                  <p class="job-card__profession">{{ job.required_profession }}</p>
+                </div>
+                <span class="badge badge-green">Open</span>
+              </div>
+              <p class="job-card__desc">{{ job.description }}</p>
+              <div class="job-card__stats">
+                <div class="stat-chip"><span class="material-icons">payments</span>{{ budgetLabel(job) }}</div>
+                <div class="stat-chip"><span class="material-icons">schedule</span>{{ durationLabel(job.duration) }}</div>
+                <div class="stat-chip"><span class="material-icons">location_on</span>{{ locationLabel(job.location_type) }}</div>
+                <div class="stat-chip"><span class="material-icons">work</span>{{ job.required_experience }}+ yrs</div>
+              </div>
+              <div class="skills-row">
+                @for (s of job.required_skills.slice(0, 4); track s) {
+                  <span class="chip chip--amber">{{ s }}</span>
+                }
+                @if (job.required_skills.length > 4) {
+                  <span class="chip chip--gray">+{{ job.required_skills.length - 4 }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+  </div>
+
+  @if (showPostModal()) {
+    <div class="modal-backdrop" (click)="closePostModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal__header">
+          <h2 class="modal__title">Post a Job</h2>
+          <button class="modal__close" (click)="closePostModal()"><span class="material-icons">close</span></button>
+        </div>
+        @if (postSuccess()) {
+          <div class="success-banner">
+            <span class="material-icons">check_circle</span>
+            Job posted successfully!
+          </div>
+        } @else {
+          @if (postError()) {
+            <div class="error-banner">{{ postError() }}</div>
+          }
+          <div class="modal__body">
+            <div class="form-field">
+              <label class="form-label">Job Title *</label>
+              <input class="input-dark" [(ngModel)]="newJob.title" placeholder="e.g. Senior Data Analyst" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Required Profession *</label>
+              <input class="input-dark" [(ngModel)]="newJob.required_profession" placeholder="e.g. Data Scientist" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Description *</label>
+              <textarea class="input-dark textarea" [(ngModel)]="newJob.description" rows="3"
+                placeholder="Describe the role, responsibilities..."></textarea>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Budget Type *</label>
+                <select class="input-dark" [(ngModel)]="newJob.budget_type">
+                  <option value="hourly">Hourly</option>
+                  <option value="fixed">Fixed</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Budget Amount (USD) *</label>
+                <input class="input-dark" type="number" [(ngModel)]="newJob.budget_amount" min="0" />
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Duration *</label>
+                <select class="input-dark" [(ngModel)]="newJob.duration">
+                  <option value="one_time">One-time</option>
+                  <option value="short_term">Short term</option>
+                  <option value="long_term">Long term</option>
+                  <option value="ongoing">Ongoing</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Location Type *</label>
+                <select class="input-dark" [(ngModel)]="newJob.location_type">
+                  <option value="remote">Remote</option>
+                  <option value="onsite">On-site</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Min Experience (years) *</label>
+                <input class="input-dark" type="number" [(ngModel)]="newJob.required_experience" min="0" />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Required Skills *</label>
+                <input class="input-dark" [(ngModel)]="requiredSkillsRaw" placeholder="Python, SQL, ML..." />
+              </div>
+            </div>
+          </div>
+          <div class="modal__footer">
+            <button class="btn-outline" (click)="closePostModal()">Cancel</button>
+            <button class="btn-primary" (click)="submitJob()"
+              [disabled]="postLoading() || !newJob.title || !newJob.description || !newJob.required_profession">
+              @if (postLoading()) {
+                <span class="material-icons spin">sync</span> Posting...
+              } @else {
+                <span class="material-icons">send</span> Post Job
+              }
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>
